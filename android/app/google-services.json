@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "947847932198",
+    "project_id": "smart-reservation-198f1",
+    "storage_bucket": "smart-reservation-198f1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:947847932198:android:7c01850678581e4165f9e7",
+        "android_client_info": {
+          "package_name": "com.example.smart_reservation"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxExJDUCFOLLYp2ZDT5v91ESgExGzglcI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
