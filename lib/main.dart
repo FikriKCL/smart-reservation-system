@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'views/screens/splash_screen.dart';
 import '/core/theme/app_theme.dart';
-
+import 'views/screens/loading_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
@@ -23,7 +22,7 @@ class MyApp extends StatelessWidget {
       title: 'Padel Book',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+      home: const LoadingScreen(),
     );
   }
 }

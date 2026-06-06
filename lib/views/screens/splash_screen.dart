@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'onboarding_screen.dart';
+import 'intro_slide.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -9,147 +9,177 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnim;
-  late Animation<double> _scaleAnim;
+    with TickerProviderStateMixin {
+  late AnimationController _bgController;
+  late AnimationController _textController;
+
+  late Animation<double> _bgOpacity;
+  late Animation<double> _textOpacity;
+  late Animation<Offset> _titleSlide;
+  late Animation<Offset> _subtitleSlide;
+  late Animation<double> _exitOpacity;
+  late AnimationController _exitController;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-    _scaleAnim = Tween<double>(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
-    );
-    _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const OnboardingScreen(),
-            transitionsBuilder: (_, anim, __, child) =>
-                FadeTransition(opacity: anim, child: child),
-            transitionDuration: const Duration(milliseconds: 600),
-          ),
-        );
-      }
-    });
+    // Background fade in
+    _bgController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _bgOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _bgController, curve: Curves.easeIn),
+    );
+
+    // Text animations
+    _textController = AnimationController(
+      duration: const Duration(milliseconds: 700),
+      vsync: this,
+    );
+    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _textController, curve: Curves.easeIn),
+    );
+    _titleSlide = Tween<Offset>(
+      begin: const Offset(0, 0.4),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
+    _subtitleSlide = Tween<Offset>(
+      begin: const Offset(0, 0.6),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _textController,
+      curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+    ));
+
+    // Exit fade
+    _exitController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _exitOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _exitController, curve: Curves.easeIn),
+    );
+
+    _runSequence();
+  }
+
+  Future<void> _runSequence() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    await _bgController.forward();
+    await Future.delayed(const Duration(milliseconds: 300));
+    await _textController.forward();
+    await Future.delayed(const Duration(milliseconds: 2000));
+    await _exitController.forward();
+
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const IntroSliderScreen(),
+          transitionDuration: const Duration(milliseconds: 600),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        ),
+      );
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _bgController.dispose();
+    _textController.dispose();
+    _exitController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF2ECC71),
-              Color(0xFF27AE60),
-              Color(0xFF1E8449),
-            ],
-          ),
-        ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fadeAnim,
-            child: ScaleTransition(
-              scale: _scaleAnim,
+      body: FadeTransition(
+        opacity: _exitOpacity,
+        child: FadeTransition(
+          opacity: _bgOpacity,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE5E5E5),
+              borderRadius: BorderRadius.circular(32),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 60),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo icon
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'H',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 56,
-                          fontWeight: FontWeight.w700,
-                          fontStyle: FontStyle.italic,
+                  // Title
+                  FadeTransition(
+                    opacity: _textOpacity,
+                    child: SlideTransition(
+                      position: _titleSlide,
+                      child: RichText(
+                        text: const TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Welcome to ',
+                              style: TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.green,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '👋',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontStyle: FontStyle.normal,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '\nHotel',
+                              style: TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.green,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  // Loading dots
-                  _LoadingDots(),
+
+                  const SizedBox(height: 20),
+
+                  // Subtitle
+                  FadeTransition(
+                    opacity: _textOpacity,
+                    child: SlideTransition(
+                      position: _subtitleSlide,
+                      child: const Text(
+                        'The best hotel booking in this century\nto accompany your vacation',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF666666),
+                          height: 1.6,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 48),
                 ],
               ),
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _LoadingDots extends StatefulWidget {
-  @override
-  State<_LoadingDots> createState() => _LoadingDotsState();
-}
-
-class _LoadingDotsState extends State<_LoadingDots>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(4, (i) {
-            final delay = i / 4;
-            final value = (((_ctrl.value - delay) % 1.0 + 1.0) % 1.0);
-            final opacity = value < 0.5 ? value * 2 : (1.0 - value) * 2;
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.4 + opacity * 0.6),
-                shape: BoxShape.circle,
-              ),
-            );
-          }),
-        );
-      },
     );
   }
 }
