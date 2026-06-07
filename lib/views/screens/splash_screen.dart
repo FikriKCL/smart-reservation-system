@@ -24,7 +24,6 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // Background fade in
     _bgController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,

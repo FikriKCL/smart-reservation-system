@@ -7,6 +7,7 @@ import 'screens/detail_screen.dart';
 import 'screens/date_screen.dart';
 import 'screens/bookmark_screen.dart';
 import 'screens/filter_screen.dart';
+import 'models/booking_info.dart';
 import 'screens/other_screens.dart';
 
 void main() {

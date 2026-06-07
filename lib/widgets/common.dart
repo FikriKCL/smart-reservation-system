@@ -170,7 +170,7 @@ class CourtGridCard extends StatelessWidget {
             Stack(
               children: [
                 CourtImage(
-                  url: court.image,
+                  url: court.picture,
                   height: 110,
                   width: double.infinity,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -253,7 +253,7 @@ class CourtGridCard extends StatelessWidget {
                         ],
                       ),
                       Text(
-                        '\$${court.price.toInt()}/hr',
+                        '\$${court.pricePerHour.toInt()}/hr',
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: kGreen),
                       ),
                     ],
@@ -300,7 +300,7 @@ class CourtListCard extends StatelessWidget {
         child: Row(
           children: [
             CourtImage(
-              url: court.image,
+              url: court.picture,
               width: 72,
               height: 72,
               borderRadius: BorderRadius.circular(14),
@@ -351,18 +351,8 @@ class CourtListCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.star, size: 12, color: kAmber500),
-                          const SizedBox(width: 2),
-                          Text(
-                            '${court.rating} (${court.reviews})',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kSlate500),
-                          ),
-                        ],
-                      ),
                       Text(
-                        '\$${court.price.toInt()}/hr',
+                        '\$${court.pricePerHour.toInt()}/hr',
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kGreen),
                       ),
                     ],

@@ -12,21 +12,21 @@ class PaymentMethodsScreen extends StatefulWidget {
 }
 
 class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
-  int _selectedMethod = 0; // 0=paypal, 1=google, 2=apple, 3=card
+  int _selectedMethod = 0; 
 
   final List<_PaymentOption> _methods = [
     _PaymentOption(
-      label: 'PayPal',
+      label: 'QRIS',
       icon: _PaymentIcons.paypal,
       color: const Color(0xFF003087),
     ),
     _PaymentOption(
-      label: 'Google Pay',
+      label: 'Cash',
       icon: _PaymentIcons.googlePay,
       color: const Color(0xFF4285F4),
     ),
     _PaymentOption(
-      label: 'Apple Pay',
+      label: 'GO-Pay',
       icon: _PaymentIcons.applePay,
       color: Colors.black,
     ),

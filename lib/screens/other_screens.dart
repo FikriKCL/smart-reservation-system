@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/court.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../models/booking_info.dart';
 
 // ── Success / Booking Confirmed ───────────────────────────────────────────────
 
@@ -72,7 +73,7 @@ class SuccessScreen extends StatelessWidget {
                   Row(
                     children: [
                       CourtImage(
-                        url: b.court.image,
+                        url: b.court.picture,
                         width: 56,
                         height: 56,
                         borderRadius: BorderRadius.circular(14),

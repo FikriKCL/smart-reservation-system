@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/court.dart';
+import '../services/slot_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '/models/booking_info.dart';
 
 const _days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
 const _months = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -27,19 +30,87 @@ class DateScreen extends StatefulWidget {
 
 class _DateScreenState extends State<DateScreen> {
   final _today = DateTime.now();
+
   late int _month;
   late int _year;
-  late int _selected;
-  late String _time;
-  int _players = 2;
+  late int _selectedDay;
+
+  String? _selectedStartTime;
+  String? _selectedEndTime;
+
+  bool _loadingSlots = false;
+  List<Map<String, dynamic>> _slots = [];
 
   @override
   void initState() {
     super.initState();
-    _month = _today.month - 1; // 0-indexed
+
+    _month = _today.month - 1;
     _year = _today.year;
-    _selected = _today.day;
-    _time = kTimeSlots[2];
+    _selectedDay = _today.day;
+
+    _loadSlots();
+  }
+
+  DateTime get _selectedDate {
+    return DateTime(_year, _month + 1, _selectedDay);
+  }
+
+  String get _formattedDate {
+    final date = _selectedDate;
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+
+    return '${date.year}-$month-$day';
+  }
+
+  List<int?> get _cells {
+    final firstDay = DateTime(_year, _month + 1, 1).weekday % 7;
+    final daysInMonth = DateTime(_year, _month + 2, 0).day;
+
+    return [
+      ...List<int?>.filled(firstDay, null),
+      ...List.generate(daysInMonth, (i) => i + 1),
+    ];
+  }
+
+  int get _total {
+    return widget.court.pricePerHour;
+  }
+
+  Future<void> _loadSlots() async {
+    setState(() {
+      _loadingSlots = true;
+      _selectedStartTime = null;
+      _selectedEndTime = null;
+    });
+
+    try {
+      final data = await SlotService.fetchAvailableSlots(
+        courtId: widget.court.id,
+        date: _formattedDate,
+      );
+
+      setState(() {
+        _slots = data;
+      });
+    } catch (e) {
+      setState(() {
+        _slots = [];
+      });
+    } finally {
+      setState(() {
+        _loadingSlots = false;
+      });
+    }
+  }
+
+  void _selectDay(int day) {
+    setState(() {
+      _selectedDay = day;
+    });
+
+    _loadSlots();
   }
 
   void _prevMonth() {
@@ -50,7 +121,11 @@ class _DateScreenState extends State<DateScreen> {
       } else {
         _month--;
       }
+
+      _selectedDay = 1;
     });
+
+    _loadSlots();
   }
 
   void _nextMonth() {
@@ -61,28 +136,26 @@ class _DateScreenState extends State<DateScreen> {
       } else {
         _month++;
       }
+
+      _selectedDay = 1;
     });
+
+    _loadSlots();
   }
 
-  List<int?> get _cells {
-    final firstDay = DateTime(_year, _month + 1, 1).weekday % 7;
-    final daysInMonth = DateTime(_year, _month + 2, 0).day;
-    return [
-      ...List<int?>.filled(firstDay, null),
-      ...List.generate(daysInMonth, (i) => i + 1),
-    ];
+  String _shortTime(String time) {
+    return time.substring(0, 5);
   }
-
-  double get _total => widget.court.price * (_players >= 4 ? 2 : 1);
 
   @override
   Widget build(BuildContext context) {
     final cells = _cells;
+
     return Scaffold(
       backgroundColor: Colors.white,
+
       body: Column(
         children: [
-          // Header
           Container(
             color: Colors.white,
             padding: EdgeInsets.only(
@@ -98,14 +171,25 @@ class _DateScreenState extends State<DateScreen> {
                   child: Container(
                     width: 38,
                     height: 38,
-                    decoration: BoxDecoration(color: kSlate100, shape: BoxShape.circle),
-                    child: const Icon(Icons.arrow_back_ios_new, size: 16, color: kSlate700),
+                    decoration: const BoxDecoration(
+                      color: kSlate100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new,
+                      size: 16,
+                      color: kSlate700,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
                   'Select Date & Time',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: kSlate800),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: kSlate800,
+                  ),
                 ),
               ],
             ),
@@ -113,11 +197,13 @@ class _DateScreenState extends State<DateScreen> {
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Calendar
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -131,7 +217,11 @@ class _DateScreenState extends State<DateScreen> {
                           children: [
                             Text(
                               '${_months[_month]} $_year',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: kSlate800),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: kSlate800,
+                              ),
                             ),
                             Row(
                               children: [
@@ -142,30 +232,33 @@ class _DateScreenState extends State<DateScreen> {
                             ),
                           ],
                         ),
+
                         const SizedBox(height: 16),
-                        // Day headers
+
                         Row(
-                          children: _days
-                              .map((d) => Expanded(
-                                    child: Center(
-                                      child: Text(
-                                        d,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: kSlate400,
-                                        ),
-                                      ),
-                                    ),
-                                  ))
-                              .toList(),
+                          children: _days.map((day) {
+                            return Expanded(
+                              child: Center(
+                                child: Text(
+                                  day,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: kSlate400,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
+
                         const SizedBox(height: 8),
-                        // Calendar grid
+
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 7,
                             mainAxisSpacing: 4,
                             crossAxisSpacing: 4,
@@ -174,17 +267,21 @@ class _DateScreenState extends State<DateScreen> {
                           itemCount: cells.length,
                           itemBuilder: (_, i) {
                             final day = cells[i];
-                            if (day == null) return const SizedBox();
-                            final isSelected = day == _selected;
+
+                            if (day == null) {
+                              return const SizedBox();
+                            }
+
+                            final isSelected = day == _selectedDay;
+
                             return GestureDetector(
-                              onTap: () => setState(() => _selected = day),
+                              onTap: () => _selectDay(day),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: isSelected ? kGreen : Colors.transparent,
+                                  color: isSelected
+                                      ? kGreen
+                                      : Colors.transparent,
                                   shape: BoxShape.circle,
-                                  boxShadow: isSelected
-                                      ? [BoxShadow(color: kGreen.withOpacity(0.4), blurRadius: 8)]
-                                      : null,
                                 ),
                                 child: Center(
                                   child: Text(
@@ -192,7 +289,9 @@ class _DateScreenState extends State<DateScreen> {
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
-                                      color: isSelected ? Colors.white : kSlate700,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : kSlate700,
                                     ),
                                   ),
                                 ),
@@ -203,100 +302,101 @@ class _DateScreenState extends State<DateScreen> {
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 24),
 
-                  // Time slots
                   const Text(
                     'Available Time',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kSlate800),
-                  ),
-                  const SizedBox(height: 12),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 2.4,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: kSlate800,
                     ),
-                    itemCount: kTimeSlots.length,
-                    itemBuilder: (_, i) {
-                      final t = kTimeSlots[i];
-                      final active = _time == t;
-                      return GestureDetector(
-                        onTap: () => setState(() => _time = t),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: active ? kGreen : kSlate50,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: active
-                                ? [BoxShadow(color: kGreen.withOpacity(0.3), blurRadius: 6)]
-                                : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              t,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: active ? Colors.white : kSlate600,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  if (_loadingSlots)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (_slots.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'No available slots.',
+                          style: TextStyle(color: kSlate400),
+                        ),
+                      ),
+                    )
+                  else
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 2.4,
+                      ),
+                      itemCount: _slots.length,
+                      itemBuilder: (_, i) {
+                        final slot = _slots[i];
+
+                        final start = slot['start_time'];
+                        final end = slot['end_time'];
+                        final available = slot['available'] == true;
+
+                        final active = _selectedStartTime == start;
+
+                        return GestureDetector(
+                          onTap: available
+                              ? () {
+                                  setState(() {
+                                    _selectedStartTime = start;
+                                    _selectedEndTime = end;
+                                  });
+                                }
+                              : null,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: !available
+                                  ? kSlate200
+                                  : active
+                                      ? kGreen
+                                      : kSlate50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${_shortTime(start)}-${_shortTime(end)}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: !available
+                                      ? kSlate400
+                                      : active
+                                          ? Colors.white
+                                          : kSlate600,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
+                        );
+                      },
+                    ),
 
-                  // Players
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: kSlate50,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Players',
-                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: kSlate800),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'How many will play?',
-                              style: TextStyle(fontSize: 12, color: kSlate400),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        _counterBtn(Icons.remove, () {
-                          if (_players > 1) setState(() => _players--);
-                        }, outlined: true),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            '$_players',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: kSlate800),
-                          ),
-                        ),
-                        _counterBtn(Icons.add, () {
-                          if (_players < 4) setState(() => _players++);
-                        }, outlined: false),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 12),
                 ],
               ),
             ),
           ),
 
-          // Footer
           Container(
             padding: EdgeInsets.only(
               left: 20,
@@ -306,7 +406,9 @@ class _DateScreenState extends State<DateScreen> {
             ),
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border(top: BorderSide(color: kSlate200)),
+              border: Border(
+                top: BorderSide(color: kSlate200),
+              ),
             ),
             child: Row(
               children: [
@@ -314,26 +416,44 @@ class _DateScreenState extends State<DateScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Total', style: TextStyle(fontSize: 11, color: kSlate400)),
+                    const Text(
+                      'Total',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: kSlate400,
+                      ),
+                    ),
                     Text(
-                      '\$${_total.toInt()}',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: kSlate900),
+                      'Rp $_total',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: kSlate900,
+                      ),
                     ),
                   ],
                 ),
+
                 const Spacer(),
+
                 SizedBox(
                   width: 160,
                   child: PrimaryButton(
-                    label: 'Continue',
-                    onPressed: () => widget.onContinue(BookingInfo(
-                      date: _selected,
-                      time: _time,
-                      players: _players,
-                      total: _total,
-                      court: widget.court,
-                    )),
-                  ),
+                  label: 'Continue',
+                  onPressed: () {
+                    if (_selectedStartTime == null) return;
+
+                    widget.onContinue(
+                      BookingInfo(
+                        date: _selectedDay,
+                        time: _selectedStartTime!,
+                        players: 2,
+                        total: _total.toDouble(),
+                        court: widget.court,
+                      ),
+                    );
+                  },
+                ),
                 ),
               ],
             ),
@@ -349,24 +469,15 @@ class _DateScreenState extends State<DateScreen> {
       child: Container(
         width: 32,
         height: 32,
-        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-        child: Icon(icon, size: 18, color: kSlate500),
-      ),
-    );
-  }
-
-  Widget _counterBtn(IconData icon, VoidCallback onTap, {required bool outlined}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: outlined ? Colors.white : kGreen,
+        decoration: const BoxDecoration(
+          color: Colors.white,
           shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6)],
         ),
-        child: Icon(icon, size: 18, color: outlined ? kGreen : Colors.white),
+        child: Icon(
+          icon,
+          size: 18,
+          color: kSlate500,
+        ),
       ),
     );
   }
