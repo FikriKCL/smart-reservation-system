@@ -8,6 +8,24 @@ import '../services/auth_service.dart';
 
 // ── Success Screen ─────────────────────────────────────────────────────────────
 
+String formatDate(String date) {
+  final d = DateTime.parse(date);
+
+  return '${d.day.toString().padLeft(2, '0')}/'
+      '${d.month.toString().padLeft(2, '0')}/'
+      '${d.year}';
+}
+
+String formatCompactRupiah(num amount) {
+  if (amount >= 1000000) {
+    return 'Rp ${(amount / 1000000).toStringAsFixed(1)}jt';
+  }
+  if (amount >= 1000) {
+    return 'Rp ${(amount / 1000).toStringAsFixed(0)}rb';
+  }
+  return 'Rp ${amount.toInt()}';
+}
+
 class SuccessScreen extends StatelessWidget {
   final BookingInfo booking;
   final VoidCallback onDone;
@@ -138,13 +156,13 @@ class SuccessScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     const Divider(color: kSlate200, height: 1),
                     const SizedBox(height: 16),
-                    _row('Tanggal', b.dateStr),
+                    _row('Tanggal', formatDate(b.reservationDate)),
                     const SizedBox(height: 10),
                     _row('Waktu', '${b.startTime} – ${b.endTime}'),
                     const SizedBox(height: 10),
                     _row('Status', 'Pending', statusChip: true),
                     const SizedBox(height: 10),
-                    _row('Total', 'Rp ${b.total.toInt()}', highlight: true),
+                   _row('Total', formatCompactRupiah(b.total), highlight: true),
                   ],
                 ),
               ),
