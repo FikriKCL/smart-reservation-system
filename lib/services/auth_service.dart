@@ -1,3 +1,4 @@
+import 'location_service.dart';
 import 'dart:convert';
 import 'api_client.dart';
 
@@ -18,6 +19,18 @@ class AuthService {
         final token = data['token'] as String;
         final user = data['user'] as Map<String, dynamic>;
         await ApiClient.saveToken(token);
+        final position = await LocationService.getCurrentLocation();
+
+if (position != null) {
+  await ApiClient.post(
+    '/user/location',
+    {
+      'latitude': position.latitude,
+      'longitude': position.longitude,
+    },
+    auth: true,
+  );
+}
         await ApiClient.saveUserInfo(user['id'] as int, user['name'] as String);
         return {'success': true, 'user': user};
       }
@@ -45,13 +58,37 @@ class AuthService {
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final token = data['token'] as String;
-        final user = data['user'] as Map<String, dynamic>;
-        await ApiClient.saveToken(token);
-        await ApiClient.saveUserInfo(user['id'] as int, user['name'] as String);
-        return {'success': true, 'user': user};
-      }
+if (response.statusCode == 200 || response.statusCode == 201) {
+  final token = data['token'] as String;
+  final user = data['user'] as Map<String, dynamic>;
+
+  // Simpan token dulu
+  await ApiClient.saveToken(token);
+
+  // Ambil lokasi dan kirim ke server
+  final position = await LocationService.getCurrentLocation();
+
+  if (position != null) {
+    await ApiClient.post(
+      '/user/location',
+      {
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+      },
+      auth: true,
+    );
+  }
+
+  await ApiClient.saveUserInfo(
+    user['id'] as int,
+    user['name'] as String,
+  );
+
+  return {
+    'success': true,
+    'user': user,
+  };
+}
 
       // Extract validation errors if any
       if (data['errors'] != null) {
