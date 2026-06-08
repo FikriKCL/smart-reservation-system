@@ -86,26 +86,22 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
       ),
     );
 
-if (confirm == true) {
-  final ok = await ReservationService.cancelReservation(r.id);
-
-  if (ok && mounted) {
-    setState(() {
-      _future = ReservationService.fetchReservations();
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Booking berhasil dibatalkan.'),
-        backgroundColor: kGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
-  }
-}
+    if (confirm == true) {
+      final ok = await ReservationService.cancelReservation(r.id);
+      if (ok && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Booking berhasil dibatalkan.'),
+            backgroundColor: kGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+        _refresh();
+      }
+    }
   }
 
   @override
