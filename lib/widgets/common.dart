@@ -434,6 +434,90 @@ class CourtListCard extends StatelessWidget {
   }
 }
 
+class FranchiseCard extends StatelessWidget {
+  final String name;
+  final String city;
+  final VoidCallback onTap;
+
+  const FranchiseCard({
+    super.key,
+    required this.name,
+    required this.city,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin:
+            const EdgeInsets.only(bottom: 12),
+        padding:
+            const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius:
+              BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black
+                  .withOpacity(0.05),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: kGreenLight,
+                borderRadius:
+                    BorderRadius.circular(
+                        12),
+              ),
+              child: const Icon(
+                Icons.storefront,
+                color: kGreen,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style:
+                        const TextStyle(
+                      fontWeight:
+                          FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    city,
+                    style:
+                        const TextStyle(
+                      color: kSlate400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Facility Icon ─────────────────────────────────────────────────────────────
 
 IconData facilityIcon(String name) {

@@ -45,4 +45,19 @@ static Future<List<Court>> getNearestCourts() async {
 
     throw Exception('Lapangan tidak ditemukan (${response.statusCode})');
   }
+static Future<List<Court>> fetchCourtsByLocation(int locationId) async {
+  final response = await ApiClient.get(
+    '/locations/$locationId/courts',
+    auth: true,
+  );
+
+  print('STATUS = ${response.statusCode}');
+  print('BODY = ${response.body}');
+
+  final List<dynamic> data = jsonDecode(response.body);
+
+  return data.map((e) => Court.fromJson(e)).toList();
 }
+}
+
+

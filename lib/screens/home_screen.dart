@@ -4,6 +4,9 @@ import '../services/court_service.dart';
 import '../services/api_client.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../models/franchise_location.dart';
+import '../services/location_service_api.dart';
+import 'franchise_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final List<String> bookmarks;
@@ -31,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late Future<List<Court>> _courtsFuture;
   late Future<List<Court>> _nearestCourtsFuture;
+  late Future<List<FranchiseLocation>> _locationsFuture;
   String? _userName;
 
 @override
@@ -39,6 +43,7 @@ void initState() {
 
   _courtsFuture = CourtService.fetchCourts();
   _nearestCourtsFuture = CourtService.getNearestCourts();
+  _locationsFuture = LocationApiService.fetchLocations();
 
   _loadUserName();
 }
@@ -333,28 +338,88 @@ void initState() {
                       const SizedBox(height: 12),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.78,
-                          ),
-                          itemCount:
-                              filtered.length > 4 ? 4 : filtered.length,
-                          itemBuilder: (_, i) => CourtGridCard(
-                            court: filtered[i],
-                            bookmarked: widget.bookmarks
-                                .contains(filtered[i].id),
-                            onToggleBookmark: () =>
-                                widget.onToggleBookmark(filtered[i].id),
-                            onTap: () =>
-                                widget.onOpenCourt(filtered[i]),
-                          ),
-                        ),
+                        child: 
+                        // GridView.builder(
+                        //   shrinkWrap: true,
+                        //   physics: const NeverScrollableScrollPhysics(),
+                        //   gridDelegate:
+                        //       const SliverGridDelegateWithFixedCrossAxisCount(
+                        //     crossAxisCount: 2,
+                        //     mainAxisSpacing: 12,
+                        //     crossAxisSpacing: 12,
+                        //     childAspectRatio: 0.78,
+                        //   ),
+                        //   itemCount:
+                        //       filtered.length > 4 ? 4 : filtered.length,
+                        //   itemBuilder: (_, i) => CourtGridCard(
+                        //     court: filtered[i],
+                        //     bookmarked: widget.bookmarks
+                        //         .contains(filtered[i].id),
+                        //     onToggleBookmark: () =>
+                        //         widget.onToggleBookmark(filtered[i].id),
+                        //     onTap: () =>
+                        //         widget.onOpenCourt(filtered[i]),
+                        //   ),
+                        // ),
+                        FutureBuilder<
+    List<FranchiseLocation>>(
+  future: _locationsFuture,
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) {
+      return const Center(
+        child:
+            CircularProgressIndicator(),
+      );
+    }
+
+    final locations =
+        snapshot.data!;
+
+    return Padding(
+      padding:
+          const EdgeInsets.symmetric(
+              horizontal: 20),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '🏢 Franchise Location',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight:
+                  FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          ...locations.map(
+            (location) =>
+                FranchiseCard(
+              name: location.name,
+              city: location.city,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        FranchiseDetailScreen(
+                      locationId:
+                          location.id,
+                      locationName:
+                          location.name,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+),
                       ),
 
                       // Full list
