@@ -19,16 +19,28 @@ class User {
     this.waitingListCount = 0,
   });
 
+  static double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  static int _toInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] ?? 0,
+      id: _toInt(json['id']),
       name: json['name'] ?? '',
       email: json['email'] ?? '',
-      phone: json['phone'] as String?,
-      homeLatitude: (json['home_latitude'] as num?)?.toDouble(),
-      homeLongitude: (json['home_longitude'] as num?)?.toDouble(),
-      reservationCount: json['reservation_count'] ?? 0,
-      waitingListCount: json['waiting_list_count'] ?? 0,
+      phone: json['phone']?.toString(),
+      homeLatitude: _toDouble(json['home_latitude']),
+      homeLongitude: _toDouble(json['home_longitude']),
+      reservationCount: _toInt(json['reservation_count']),
+      waitingListCount: _toInt(json['waiting_list_count']),
     );
   }
 

@@ -4,6 +4,24 @@ import '../services/reservation_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 
+String formatDate(String date) {
+  final d = DateTime.parse(date);
+
+  return '${d.day.toString().padLeft(2, '0')}/'
+      '${d.month.toString().padLeft(2, '0')}/'
+      '${d.year}';
+}
+
+String formatCompactRupiah(num amount) {
+  if (amount >= 1000000) {
+    return 'Rp ${(amount / 1000000).toStringAsFixed(1)}jt';
+  }
+  if (amount >= 1000) {
+    return 'Rp ${(amount / 1000).toStringAsFixed(0)}rb';
+  }
+  return 'Rp ${amount.toInt()}';
+}
+
 class MyBookingsScreen extends StatefulWidget {
   final VoidCallback? onBack;
 
@@ -219,9 +237,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
                       onCancel: _cancel,
                     ),
                     _ReservationList(
-                      reservations: all
-                          .where((r) => r.status == 'cancelled')
-                          .toList(),
+                      reservations:
+                          all.where((r) => r.status == 'cancelled').toList(),
                       onCancel: null,
                     ),
                   ],
@@ -415,22 +432,27 @@ class _ReservationCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 14),
             const Divider(color: kSlate100, height: 1),
             const SizedBox(height: 14),
-
             Row(
               children: [
-                _info(Icons.calendar_today_outlined, r.reservationDate),
-                const SizedBox(width: 16),
-                _info(
-                  Icons.access_time_outlined,
-                  '${r.startTime} – ${r.endTime}',
+                Expanded(
+                  flex: 2,
+                  child: _info(
+                    Icons.calendar_today_outlined,
+                    formatDate(r.reservationDate),
+                  ),
                 ),
-                const Spacer(),
+                Expanded(
+                  flex: 2,
+                  child: _info(
+                    Icons.access_time_outlined,
+                    '${r.startTime} - ${r.endTime}',
+                  ),
+                ),
                 Text(
-                  'Rp ${r.totalPrice}',
+                  formatCompactRupiah(r.totalPrice),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -439,7 +461,6 @@ class _ReservationCard extends StatelessWidget {
                 ),
               ],
             ),
-
             if (onCancel != null && r.isPending) ...[
               const SizedBox(height: 14),
               SizedBox(
@@ -475,12 +496,18 @@ class _ReservationCard extends StatelessWidget {
       children: [
         Icon(icon, size: 13, color: kSlate400),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 12, color: kSlate500),
+        Expanded(
+          child: Text(
+            text,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: const TextStyle(
+              fontSize: 12,
+              color: kSlate500,
+            ),
+          ),
         ),
       ],
     );
   }
 }
-
