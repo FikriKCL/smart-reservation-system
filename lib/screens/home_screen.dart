@@ -362,64 +362,64 @@ void initState() {
                         //   ),
                         // ),
                         FutureBuilder<
-    List<FranchiseLocation>>(
-  future: _locationsFuture,
-  builder: (context, snapshot) {
-    if (!snapshot.hasData) {
-      return const Center(
-        child:
-            CircularProgressIndicator(),
-      );
-    }
+                          List<FranchiseLocation>>(
+                        future: _locationsFuture,
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const Center(
+                              child:
+                                  CircularProgressIndicator(),
+                            );
+                          }
 
-    final locations =
-        snapshot.data!;
+                          final locations =
+                              snapshot.data!;
 
-    return Padding(
-      padding:
-          const EdgeInsets.symmetric(
-              horizontal: 20),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '🏢 Franchise Location',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight:
-                  FontWeight.bold,
-            ),
-          ),
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(
+                                    horizontal: 20),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '🏢 Franchise Location',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight:
+                                        FontWeight.bold,
+                                  ),
+                                ),
 
-          const SizedBox(height: 12),
+                                const SizedBox(height: 12),
 
-          ...locations.map(
-            (location) =>
-                FranchiseCard(
-              name: location.name,
-              city: location.city,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        FranchiseDetailScreen(
-                      locationId: location.id,
-                      locationName: location.name,
-                      bookmarks: widget.bookmarks,
-                      onToggleBookmark: widget.onToggleBookmark,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  },
-),
+                                ...locations.map(
+                                  (location) =>
+                                      FranchiseCard(
+                                    name: location.name,
+                                    city: location.city,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              FranchiseDetailScreen(
+                                            locationId: location.id,
+                                            locationName: location.name,
+                                            bookmarks: widget.bookmarks,
+                                            onToggleBookmark: widget.onToggleBookmark,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                       ),
 
                       // Full list
