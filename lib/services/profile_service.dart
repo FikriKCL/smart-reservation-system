@@ -5,16 +5,22 @@ import '../models/user.dart';
 class ProfileService {
   /// GET /profile
   static Future<User> fetchProfile() async {
-    final response = await ApiClient.get('/profile', auth: true);
+  final token = await ApiClient.getToken();
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      return User.fromJson(data);
-    }
+  print('PROFILE TOKEN = $token');
 
-    throw Exception('Gagal memuat profil (${response.statusCode})');
+  final response = await ApiClient.get('/profile', auth: true);
+
+  print('PROFILE STATUS = ${response.statusCode}');
+  print('PROFILE BODY = ${response.body}');
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return User.fromJson(data['data'] ?? data);
   }
 
+  throw Exception('Gagal memuat profil (${response.statusCode})');
+}
   /// PUT /profile
   static Future<Map<String, dynamic>> updateProfile({
     required String name,

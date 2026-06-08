@@ -17,6 +17,18 @@ class ApiClient {
     return prefs.getString('auth_token');
   }
 
+  static Future<void> Function()? onUnauthorized;
+
+  static Future<void> _handleUnauthorized(http.Response response) async {
+    if (response.statusCode == 401) {
+      await clearToken();
+
+      if (onUnauthorized != null) {
+        await onUnauthorized!();
+      }
+    }
+  }
+
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
@@ -50,6 +62,8 @@ class ApiClient {
     return token != null && token.isNotEmpty;
   }
 
+  
+
   // ── Headers ──────────────────────────────────────────────────────────────────
 
   static Future<Map<String, String>> _authHeaders({bool auth = false}) async {
@@ -57,6 +71,12 @@ class ApiClient {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
     };
+
+    if (auth) {
+      final token = await getToken();
+      print('AUTH TOKEN SENT = $token');
+    }
+
     if (auth) {
       final token = await getToken();
       if (token != null) headers['Authorization'] = 'Bearer $token';
@@ -67,10 +87,14 @@ class ApiClient {
   // ── HTTP methods ─────────────────────────────────────────────────────────────
 
   static Future<http.Response> get(String path, {bool auth = false}) async {
-    return http.get(
+    final response = await http.get(
       Uri.parse('$baseUrl$path'),
       headers: await _authHeaders(auth: auth),
     );
+
+    await _handleUnauthorized(response);
+
+    return response;
   }
 
   static Future<http.Response> post(

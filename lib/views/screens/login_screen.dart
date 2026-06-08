@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme.dart';
+import '/services/api_client.dart';
 import '../../services/auth_service.dart';
 import '../../main.dart';
 
@@ -157,7 +158,7 @@ class _LoginFormState extends State<_LoginForm> {
       _loading = true;
       _error = null;
     });
-
+    await ApiClient.clearToken();
     final result = await AuthService.login(
       _emailCtrl.text.trim(),
       _passCtrl.text,

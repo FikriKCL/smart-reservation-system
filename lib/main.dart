@@ -12,9 +12,21 @@ import 'models/booking_info.dart';
 import 'screens/other_screens.dart';
 import 'screens/payment_methods_screen.dart';
 import 'views/screens/splash_screen.dart';
+import 'services/api_client.dart';
+import 'views/screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  ApiClient.onUnauthorized = () async {
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => const SplashScreen(),
+      ),
+      (route) => false,
+    );
+  };
+
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
@@ -23,12 +35,17 @@ void main() async {
   runApp(const PadelApp());
 }
 
+final GlobalKey<NavigatorState> navigatorKey =
+    GlobalKey<NavigatorState>();
+
 class PadelApp extends StatelessWidget {
   const PadelApp({super.key});
 
+  
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+   return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Padel Reservation',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),

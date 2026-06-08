@@ -160,7 +160,7 @@ class SuccessScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     _row('Waktu', '${b.startTime} – ${b.endTime}'),
                     const SizedBox(height: 10),
-                    _row('Status', 'Pending', statusChip: true),
+                    _row('Status','Approved', statusChip: true),
                     const SizedBox(height: 10),
                    _row('Total', formatCompactRupiah(b.total), highlight: true),
                   ],
@@ -211,8 +211,8 @@ class SuccessScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Text(
-              'Pending',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFF59E0B)),
+              'Approved',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kGreen),
             ),
           )
         else

@@ -37,7 +37,7 @@ factory Reservation.fromJson(Map<String, dynamic> json) {
     endTime: (json['end_time'] ?? '').substring(0, 5),
     duration: json['duration'] ?? 1,
     totalPrice: json['total_price'] ?? 0,
-    status: json['status'] ?? 'pending',
+    status: json['status'] ?? 'approved',
     court: json['court'] != null
         ? Court.fromJson(json['court'])
         : null,
