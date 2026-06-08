@@ -405,10 +405,10 @@ void initState() {
                   MaterialPageRoute(
                     builder: (_) =>
                         FranchiseDetailScreen(
-                      locationId:
-                          location.id,
-                      locationName:
-                          location.name,
+                      locationId: location.id,
+                      locationName: location.name,
+                      bookmarks: widget.bookmarks,
+                      onToggleBookmark: widget.onToggleBookmark,
                     ),
                   ),
                 );
