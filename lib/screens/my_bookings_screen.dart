@@ -294,6 +294,7 @@ class _ReservationList extends StatelessWidget {
   }
 }
 
+
 class _ReservationCard extends StatelessWidget {
   final Reservation reservation;
   final VoidCallback? onCancel;
@@ -365,7 +366,7 @@ class _ReservationCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 const SizedBox(width: 12),
-
+                //Seperti FlexBox di HTML, digunakan untuk mengatur persentase ruang yang diterima oleh widget. dan juga untuk mencegah overflow
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
