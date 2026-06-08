@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_reservation/utils/currency_formatter.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 
@@ -156,7 +157,7 @@ class _FilterScreenState extends State<FilterScreen> {
                         ),
                       ),
                       Text(
-                        'Rp ${_price.toInt()}',
+                        CurrencyFormatter.rupiah(_price),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,

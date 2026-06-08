@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/court.dart';
 import '../services/court_service.dart';
 import '../theme.dart';
+import '../utils/currency_formatter.dart';
 import '../widgets/common.dart';
 
 class BookmarkScreen extends StatefulWidget {
@@ -259,14 +260,14 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
 
                                         const SizedBox(height: 4),
 
-                                        Text(
-                                          'Rp ${_confirm!.pricePerHour}/hr',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w800,
-                                            color: kGreen,
+                                      Text(
+                                            '${CurrencyFormatter.rupiah(_confirm!.pricePerHour)}/jam',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w800,
+                                              color: kGreen,
+                                            ),
                                           ),
-                                        ),
                                       ],
                                     ),
                                   ),

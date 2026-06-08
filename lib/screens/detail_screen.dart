@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/court.dart';
+import '../utils/currency_formatter.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 
@@ -270,7 +271,7 @@ class DetailScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Rp ${court.pricePerHour}',
+                          CurrencyFormatter.rupiah(court.pricePerHour),
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
@@ -278,7 +279,7 @@ class DetailScreen extends StatelessWidget {
                           ),
                         ),
                         const Text(
-                          '/hour',
+                          '/jam',
                           style: TextStyle(
                             fontSize: 12,
                             color: kSlate400,
