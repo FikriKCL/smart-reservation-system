@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/currency_formatter.dart';
 import '../models/court.dart';
 import '../theme.dart';
 
@@ -283,9 +284,8 @@ class CourtGridCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      // FIX: ganti $ dengan Rp
                       Text(
-                        'Rp ${court.pricePerHour}/jam',
+                        '${CurrencyFormatter.rupiah(court.pricePerHour)}/jam',
                         style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: kGreen),
                       ),
                     ],
@@ -412,7 +412,7 @@ class CourtListCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   // FIX: ganti $ dengan Rp
                   Text(
-                    'Rp ${court.pricePerHour}/jam',
+                    '${CurrencyFormatter.rupiah(court.pricePerHour)}/jam',
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kGreen),
                   ),
                 ],

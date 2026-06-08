@@ -17,18 +17,16 @@ class ReservationService {
   }
 
   /// POST /reservations
-  static Future<Map<String, dynamic>> createReservation({
-    required int userId,
-    required int courtId,
-    required String reservationDate, // 'YYYY-MM-DD'
-    required String startTime,       // 'HH:mm'
-    required String endTime,         // 'HH:mm'
-  }) async {
+static Future<Map<String, dynamic>> createReservation({
+  required String courtId,
+  required String reservationDate,
+  required String startTime,
+  required String endTime,
+}) async {
     try {
       final response = await ApiClient.post(
         '/reservations',
         {
-          'user_id': userId,
           'court_id': courtId,
           'reservation_date': reservationDate,
           'start_time': startTime,
@@ -39,12 +37,12 @@ class ReservationService {
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      if (response.statusCode == 201) {
-        return {
-          'success': true,
-          'data': Reservation.fromJson(data['data'] as Map<String, dynamic>),
-        };
-      }
+        if (response.statusCode == 201) {
+          return {
+            'success': true,
+            'data': data['data'],
+          };
+        }
 
       if (response.statusCode == 409) {
         return {

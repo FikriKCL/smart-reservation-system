@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:smart_reservation/utils/currency_formatter.dart';
 import '../models/booking_info.dart';
 import '../services/reservation_service.dart';
 import '../services/payments_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
-import '../screens/other_screens.dart';
 
 class PaymentConfirmationScreen extends StatelessWidget {
   final BookingInfo booking;
@@ -36,7 +36,6 @@ class PaymentConfirmationScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Detail booking card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -67,15 +66,13 @@ class PaymentConfirmationScreen extends StatelessWidget {
                   const Divider(height: 24, color: kSlate200),
                   _row(
                     'Total',
-                    'Rp ${booking.total.toInt()}',
+                    CurrencyFormatter.rupiah(booking.total),
                     highlight: true,
                   ),
                 ],
               ),
             ),
-
             const Spacer(),
-
             PrimaryButton(
               label: 'Konfirmasi Pembayaran',
               onPressed: () => _handleConfirm(context),
@@ -95,12 +92,16 @@ class PaymentConfirmationScreen extends StatelessWidget {
           label,
           style: const TextStyle(fontSize: 13, color: kSlate500),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: highlight ? FontWeight.w800 : FontWeight.w600,
-            color: highlight ? kGreen : kSlate700,
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: highlight ? FontWeight.w800 : FontWeight.w600,
+              color: highlight ? kGreen : kSlate700,
+            ),
           ),
         ),
       ],
@@ -108,28 +109,28 @@ class PaymentConfirmationScreen extends StatelessWidget {
   }
 
   Future<void> _handleConfirm(BuildContext context) async {
-    // Tampilkan loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator(color: kGreen)),
-    );
+    _showLoading(context);
 
-    // Buat reservasi dulu
     final reservationResult = await ReservationService.createReservation(
-      userId: 1,
-      courtId: int.parse(booking.court.id),
+      courtId: booking.court.id.toString(),
       reservationDate: booking.reservationDate,
       startTime: booking.startTime,
       endTime: booking.endTime,
     );
 
     if (!context.mounted) return;
+    Navigator.pop(context);
 
     if (reservationResult['success'] == true) {
-      final reservationId = reservationResult['data'].id as int;
+      final reservationId = int.parse(reservationResult['data']['id'].toString());
 
-      // Buat pembayaran
+      // if (reservationId == null) {
+      //   _showSnack(context, 'ID reservasi tidak valid.');
+      //   return;
+      // }
+
+      _showLoading(context);
+
       final paymentResult = await PaymentService.createPayment(
         reservationId: reservationId,
         paymentOptionId: paymentOptionId,
@@ -137,21 +138,156 @@ class PaymentConfirmationScreen extends StatelessWidget {
       );
 
       if (!context.mounted) return;
-      Navigator.pop(context); // tutup loading
+      Navigator.pop(context);
 
       if (paymentResult['success'] == true) {
         Navigator.pop(context, {
-  'success': true,
-  'reservationId': reservationId,
-});
+          'success': true,
+          'reservationId': reservationId,
+        });
       } else {
-        _showSnack(context, paymentResult['message'] ?? 'Pembayaran gagal');
+        _showSnack(
+          context,
+          paymentResult['message'] ?? 'Pembayaran gagal',
+        );
       }
+    } else if (reservationResult['conflict'] == true) {
+      _showConflictDialog(context, reservationResult);
     } else {
-      if (!context.mounted) return;
-      Navigator.pop(context); // tutup loading
-      _showSnack(context, reservationResult['message'] ?? 'Reservasi gagal');
+      _showSnack(
+        context,
+        reservationResult['message'] ?? 'Reservasi gagal',
+      );
     }
+  }
+
+  int? _extractReservationId(dynamic data) {
+    if (data == null) return null;
+
+    if (data is Map<String, dynamic>) {
+      return int.tryParse(data['id'].toString());
+    }
+
+    try {
+      return int.tryParse(data.id.toString());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _showLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: kGreen),
+      ),
+    );
+  }
+
+  void _showConflictDialog(
+    BuildContext context,
+    Map<String, dynamic> reservationResult,
+  ) {
+    final List slots = reservationResult['recommended_slots'] ?? [];
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text(
+          'Slot Sudah Terisi',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: kSlate800,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              reservationResult['message'] ??
+                  'Jadwal sudah dibooking pengguna lain.',
+              style: const TextStyle(
+                fontSize: 13,
+                color: kSlate500,
+              ),
+            ),
+            const SizedBox(height: 14),
+            if (slots.isNotEmpty) ...[
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Rekomendasi slot lain:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: kSlate700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...slots.map((slot) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: kSlate50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: kSlate200),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        size: 16,
+                        color: kGreen,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${slot['start_time']} - ${slot['end_time']}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: kSlate700,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ] else
+              const Text(
+                'Tidak ada slot alternatif yang tersedia.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: kSlate500,
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'Pilih Jadwal Lain',
+              style: TextStyle(
+                color: kGreen,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSnack(BuildContext context, String msg) {
@@ -160,7 +296,9 @@ class PaymentConfirmationScreen extends StatelessWidget {
         content: Text(msg),
         backgroundColor: const Color(0xFFEF4444),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }
