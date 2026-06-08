@@ -25,22 +25,24 @@ class Reservation {
     this.court,
   });
 
-  factory Reservation.fromJson(Map<String, dynamic> json) {
-    return Reservation(
-      id: json['id'] ?? 0,
-      userId: json['user_id'] ?? 0,
-      courtId: json['court_id'] ?? 0,
-      reservationDate: json['reservation_date'] ?? '',
-      startTime: (json['start_time'] ?? '').substring(0, 5), // strip seconds
-      endTime: (json['end_time'] ?? '').substring(0, 5),
-      duration: json['duration'] ?? 1,
-      totalPrice: json['total_price'] ?? 0,
-      status: json['status'] ?? 'pending',
-      court: json['court'] != null
-          ? Court.fromJson(json['court'] as Map<String, dynamic>)
-          : null,
-    );
-  }
+factory Reservation.fromJson(Map<String, dynamic> json) {
+  print('STATUS FROM API = ${json['status']}');
+
+  return Reservation(
+    id: json['id'] ?? 0,
+    userId: json['user_id'] ?? 0,
+    courtId: json['court_id'] ?? 0,
+    reservationDate: json['reservation_date'] ?? '',
+    startTime: (json['start_time'] ?? '').substring(0, 5),
+    endTime: (json['end_time'] ?? '').substring(0, 5),
+    duration: json['duration'] ?? 1,
+    totalPrice: json['total_price'] ?? 0,
+    status: json['status'] ?? 'pending',
+    court: json['court'] != null
+        ? Court.fromJson(json['court'])
+        : null,
+  );
+}
 
   bool get isPending   => status == 'pending';
   bool get isApproved  => status == 'approved';
