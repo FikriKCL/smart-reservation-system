@@ -4,6 +4,7 @@ import '../theme.dart';
 import '../widgets/common.dart';
 import '../models/booking_info.dart';
 
+
 // ── Success / Booking Confirmed ───────────────────────────────────────────────
 
 class SuccessScreen extends StatelessWidget {
@@ -97,13 +98,13 @@ class SuccessScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Divider(color: kSlate200, height: 1),
                   const SizedBox(height: 16),
-                  _row('Date', 'Day ${b.date}'),
+                  _row('Date', 'Day ${b.reservationDate}'),
                   const SizedBox(height: 10),
-                  _row('Time', b.time),
+                  _row('Time', b.startTime),
+                  // const SizedBox(height: 10),
+                  // _row('Players', '${b.players}'),
                   const SizedBox(height: 10),
-                  _row('Players', '${b.players}'),
-                  const SizedBox(height: 10),
-                  _row('Total Paid', '\$${b.total.toInt()}', highlight: true),
+                  _row('Total Paid', '\Rp${b.total.toInt()}', highlight: true),
                 ],
               ),
             ),

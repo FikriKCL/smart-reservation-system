@@ -8,8 +8,12 @@ class SlotService {
     required String courtId,
     required String date,
   }) async {
+    final url = Uri.parse(
+      '$baseUrl/courts/$courtId/available-slots?date=$date',
+    );
+
     final response = await http.get(
-      Uri.parse('$baseUrl/courts/$courtId/available-slots?date=$date'),
+      url,
       headers: {
         'Accept': 'application/json',
       },
@@ -20,6 +24,6 @@ class SlotService {
       return List<Map<String, dynamic>>.from(decoded['data']);
     }
 
-    throw Exception('Failed to fetch available slots');
+    throw Exception(response.body);
   }
 }

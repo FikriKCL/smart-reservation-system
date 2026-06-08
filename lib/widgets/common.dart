@@ -253,7 +253,7 @@ class CourtGridCard extends StatelessWidget {
                         ],
                       ),
                       Text(
-                        '\$${court.pricePerHour.toInt()}/hr',
+                        '\Rp${court.pricePerHour.toInt()}/hr',
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: kGreen),
                       ),
                     ],
@@ -352,7 +352,7 @@ class CourtListCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$${court.pricePerHour.toInt()}/hr',
+                        '\Rp${court.pricePerHour.toInt()}/hr',
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kGreen),
                       ),
                     ],

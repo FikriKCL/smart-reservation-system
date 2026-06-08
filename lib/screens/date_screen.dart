@@ -4,6 +4,8 @@ import '../services/slot_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import '/models/booking_info.dart';
+// import '../services/reservation_service.dart';
+
 
 const _days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
@@ -87,9 +89,9 @@ class _DateScreenState extends State<DateScreen> {
 
     try {
       final data = await SlotService.fetchAvailableSlots(
-        courtId: widget.court.id,
-        date: _formattedDate,
-      );
+      courtId: widget.court.id,
+      date: _formattedDate,
+    );
 
       setState(() {
         _slots = data;
@@ -441,19 +443,26 @@ class _DateScreenState extends State<DateScreen> {
                   child: PrimaryButton(
                   label: 'Continue',
                   onPressed: () {
-                    if (_selectedStartTime == null) return;
+                      if (_selectedStartTime == null || _selectedEndTime == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Pilih jam terlebih dahulu.'),
+                          ),
+                        );
+                        return;
+                      }
 
-                    widget.onContinue(
-                      BookingInfo(
-                        date: _selectedDay,
-                        time: _selectedStartTime!,
-                        players: 2,
-                        total: _total.toDouble(),
-                        court: widget.court,
-                      ),
-                    );
-                  },
-                ),
+                      widget.onContinue(
+                        BookingInfo(
+                          reservationDate: _formattedDate,
+                          startTime: _selectedStartTime!,
+                          endTime: _selectedEndTime!,
+                          total: _total.toDouble(),
+                          court: widget.court,
+                        ),
+                      );
+                    },
+                )
                 ),
               ],
             ),

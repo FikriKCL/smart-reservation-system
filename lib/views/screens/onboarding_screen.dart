@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
-import '../payment/payment_methods_screen.dart';
+import '../../screens/payment_methods_screen.dart';
+import '/main.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -53,7 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _navigateToPayment() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const PaymentMethodsScreen(),
+        pageBuilder: (_, __, ___) => const PadelApp(),
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
         transitionDuration: const Duration(milliseconds: 500),

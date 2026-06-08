@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../core/theme/app_theme.dart';
+import '../core/theme/app_theme.dart';
 import '/widgets/primary_button.dart';
 import 'payment_confirmation_screen.dart';
 
@@ -101,14 +101,11 @@ class _AddNewCardScreenState extends State<AddNewCardScreen> {
               ],
             ),
             const SizedBox(height: 40),
-
             PrimaryButton(
               label: 'Add New Card',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const PaymentConfirmationScreen()),
-              ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
             ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:smart_reservation/views/screens/splash_screen.dart';
 import 'models/court.dart';
 import 'theme.dart';
 import 'screens/home_screen.dart';
@@ -9,6 +10,7 @@ import 'screens/bookmark_screen.dart';
 import 'screens/filter_screen.dart';
 import 'models/booking_info.dart';
 import 'screens/other_screens.dart';
+import 'screens/payment_methods_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +30,7 @@ class PadelApp extends StatelessWidget {
       title: 'Padel Reservation',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
-      home: const AppShell(),
+      home: const SplashScreen(),
     );
   }
 }
@@ -122,11 +124,21 @@ class _AppShellState extends State<AppShell> {
       case AppScreen.date:
         return DateScreen(
           court: _currentCourt!,
-          onBack: () => setState(() => _screen = AppScreen.detail),
-          onContinue: (info) => setState(() {
-            _booking = info;
-            _screen = AppScreen.success;
-          }),
+          onBack: () {
+            setState(() {
+              _screen = AppScreen.detail;
+            });
+          },
+          onContinue: (booking) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PaymentMethodsScreen(
+                  booking: booking,
+                ),
+              ),
+            );
+          },
         );
       case AppScreen.filter:
         return FilterScreen(
@@ -149,8 +161,16 @@ class _AppShellState extends State<AppShell> {
   Widget _buildBottomNav() {
     const items = [
       (icon: Icons.home_outlined, filledIcon: Icons.home, label: 'Home'),
-      (icon: Icons.bookmark_outline, filledIcon: Icons.bookmark, label: 'Saved'),
-      (icon: Icons.calendar_today_outlined, filledIcon: Icons.calendar_today, label: 'Bookings'),
+      (
+        icon: Icons.bookmark_outline,
+        filledIcon: Icons.bookmark,
+        label: 'Saved'
+      ),
+      (
+        icon: Icons.calendar_today_outlined,
+        filledIcon: Icons.calendar_today,
+        label: 'Bookings'
+      ),
       (icon: Icons.person_outline, filledIcon: Icons.person, label: 'Profile'),
     ];
 
@@ -159,7 +179,10 @@ class _AppShellState extends State<AppShell> {
         color: Colors.white,
         border: Border(top: BorderSide(color: kSlate200, width: 1)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, -4)),
+          BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 16,
+              offset: const Offset(0, -4)),
         ],
       ),
       child: SafeArea(
