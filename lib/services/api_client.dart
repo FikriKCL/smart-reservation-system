@@ -7,8 +7,8 @@ class ApiClient {
   // Android emulator → 'http://10.0.2.2:8000/api'
   // iOS sim / web    → 'http://127.0.0.1:8000/api'
   // Device fisik     → 'http://<IP_LAN>:8000/api'
-  // static const String baseUrl = 'http://127.0.0.1:8000/api';
-  static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  // static const String baseUrl = 'http://10.0.2.2:8000/api';
 
   // ── Token & user storage ─────────────────────────────────────────────────────
 
