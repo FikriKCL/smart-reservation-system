@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:smart_reservation/views/screens/splash_screen.dart';
 import 'models/court.dart';
 import 'theme.dart';
 import 'screens/home_screen.dart';
@@ -8,16 +7,19 @@ import 'screens/detail_screen.dart';
 import 'screens/date_screen.dart';
 import 'screens/bookmark_screen.dart';
 import 'screens/filter_screen.dart';
+import 'screens/my_bookings_screen.dart';
 import 'models/booking_info.dart';
 import 'screens/other_screens.dart';
 import 'screens/payment_methods_screen.dart';
+import 'views/screens/splash_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
+
   runApp(const PadelApp());
 }
 
@@ -35,7 +37,17 @@ class PadelApp extends StatelessWidget {
   }
 }
 
-enum AppScreen { home, bookmark, detail, date, filter, profile, success }
+enum AppScreen {
+  home,
+  bookmark,
+  detail,
+  date,
+  payment,
+  filter,
+  profile,
+  success,
+  myBookings
+}
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -47,7 +59,7 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   AppScreen _screen = AppScreen.home;
   int _activeTab = 0;
-  List<String> _bookmarks = ['2', '4'];
+  List<String> _bookmarks = [];
   Court? _currentCourt;
   BookingInfo? _booking;
 
@@ -77,7 +89,7 @@ class _AppShellState extends State<AppShell> {
         case 1:
           _screen = AppScreen.bookmark;
         case 2:
-          _screen = _booking != null ? AppScreen.success : AppScreen.bookmark;
+          _screen = AppScreen.myBookings;
         case 3:
           _screen = AppScreen.profile;
       }
@@ -87,6 +99,7 @@ class _AppShellState extends State<AppShell> {
   bool get _showBottomNav =>
       _screen == AppScreen.home ||
       _screen == AppScreen.bookmark ||
+      _screen == AppScreen.myBookings ||
       _screen == AppScreen.profile;
 
   @override
@@ -107,12 +120,14 @@ class _AppShellState extends State<AppShell> {
           onOpenCourt: _openCourt,
           onOpenFilter: () => setState(() => _screen = AppScreen.filter),
         );
+
       case AppScreen.bookmark:
         return BookmarkScreen(
           bookmarks: _bookmarks,
           onToggleBookmark: _toggleBookmark,
           onOpenCourt: _openCourt,
         );
+
       case AppScreen.detail:
         return DetailScreen(
           court: _currentCourt!,
@@ -121,32 +136,72 @@ class _AppShellState extends State<AppShell> {
           onBack: () => setState(() => _screen = AppScreen.home),
           onBook: () => setState(() => _screen = AppScreen.date),
         );
+
       case AppScreen.date:
         return DateScreen(
           court: _currentCourt!,
-          onBack: () {
-            setState(() {
-              _screen = AppScreen.detail;
-            });
-          },
-          onContinue: (booking) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PaymentMethodsScreen(
-                  booking: booking,
-                ),
-              ),
-            );
-          },
+          onBack: () => setState(() => _screen = AppScreen.detail),
+          // Setelah booking di DateScreen, arahkan ke payment
+          onContinue: (info) async {
+  setState(() {
+    _booking = info;
+  });
+
+  final result = await Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => PaymentMethodsScreen(
+        booking: info,
+      ),
+    ),
+  );
+
+  if (result != null && result['success'] == true) {
+    setState(() {
+      _booking = BookingInfo(
+        date: info.date,
+        dateStr: info.dateStr,
+        startTime: info.startTime,
+        endTime: info.endTime,
+        players: info.players,
+        total: info.total,
+        court: info.court,
+        reservationId: result['reservationId'],
+      );
+
+      _screen = AppScreen.success;
+    });
+  }
+},
         );
+
       case AppScreen.filter:
         return FilterScreen(
           onBack: () => setState(() => _screen = AppScreen.home),
           onApply: () => setState(() => _screen = AppScreen.home),
         );
+
+      case AppScreen.myBookings:
+        return MyBookingsScreen(
+          onBack: () => setState(() {
+            _screen = AppScreen.home;
+            _activeTab = 0;
+          }),
+        );
+
       case AppScreen.profile:
-        return const ProfileScreen();
+        return ProfileScreen(
+          onMyBookings: () => setState(() {
+            _screen = AppScreen.myBookings;
+            _activeTab = 2;
+          }),
+          onLogout: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const SplashScreen()),
+              (_) => false,
+            );
+          },
+        );
+
       case AppScreen.success:
         return SuccessScreen(
           booking: _booking!,
@@ -154,23 +209,22 @@ class _AppShellState extends State<AppShell> {
             _screen = AppScreen.home;
             _activeTab = 0;
           }),
+          onViewBookings: () => setState(() {
+            _screen = AppScreen.myBookings;
+            _activeTab = 2;
+          }),
         );
+
+      case AppScreen.payment:
+        return PaymentMethodsScreen(booking: _booking!);
     }
   }
 
   Widget _buildBottomNav() {
     const items = [
       (icon: Icons.home_outlined, filledIcon: Icons.home, label: 'Home'),
-      (
-        icon: Icons.bookmark_outline,
-        filledIcon: Icons.bookmark,
-        label: 'Saved'
-      ),
-      (
-        icon: Icons.calendar_today_outlined,
-        filledIcon: Icons.calendar_today,
-        label: 'Bookings'
-      ),
+      (icon: Icons.bookmark_outline, filledIcon: Icons.bookmark, label: 'Saved'),
+      (icon: Icons.calendar_today_outlined, filledIcon: Icons.calendar_today, label: 'Bookings'),
       (icon: Icons.person_outline, filledIcon: Icons.person, label: 'Profile'),
     ];
 
@@ -180,9 +234,10 @@ class _AppShellState extends State<AppShell> {
         border: Border(top: BorderSide(color: kSlate200, width: 1)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 16,
-              offset: const Offset(0, -4)),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
         ],
       ),
       child: SafeArea(

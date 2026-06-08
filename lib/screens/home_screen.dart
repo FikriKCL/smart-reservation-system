@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/court.dart';
 import '../services/court_service.dart';
+import '../services/api_client.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 
@@ -23,32 +24,33 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<String> kFilterTags = [
-  'All',
-  'Padel',
-];
-
+  final List<String> _filterTags = ['All', 'Padel'];
   String _filter = 'All';
   String _query = '';
   final _ctrl = TextEditingController();
 
   late Future<List<Court>> _courtsFuture;
+  String? _userName;
 
   @override
   void initState() {
     super.initState();
     _courtsFuture = CourtService.fetchCourts();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final name = await ApiClient.getUserName();
+    if (mounted) setState(() => _userName = name);
   }
 
   List<Court> _filterCourts(List<Court> courts) {
     return courts.where((c) {
       final matchTag = _filter == 'All' || c.tag == _filter;
       final q = _query.toLowerCase();
-
       final matchQ =
           c.name.toLowerCase().contains(q) ||
           c.location.toLowerCase().contains(q);
-
       return matchTag && matchQ;
     }).toList();
   }
@@ -64,134 +66,295 @@ class _HomeScreenState extends State<HomeScreen> {
     return FutureBuilder<List<Court>>(
       future: _courtsFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Center(
-            child: Text('Error: ${snapshot.error}'),
-          );
-        }
-
         final courts = snapshot.data ?? [];
         final filtered = _filterCourts(courts);
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
 
-        return Column(
-          children: [
-            // bagian header kamu tetap sama
-
-            Expanded(
+        return CustomScrollView(
+          slivers: [
+            // ── Header ────────────────────────────────────────────────────────
+            SliverToBoxAdapter(
               child: Container(
                 decoration: const BoxDecoration(
-                  color: kSlate50,
+                  color: kGreen,
                   borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(24),
+                    bottom: Radius.circular(28),
                   ),
                 ),
-                child: ListView(
-                  padding: const EdgeInsets.only(top: 16, bottom: 100),
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 20,
+                  right: 20,
+                  bottom: 28,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _userName != null
+                                  ? 'Halo, ${_userName!.split(' ').first} 👋'
+                                  : 'Halo! 👋',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Cari lapangan padel favoritmu',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: widget.onOpenFilter,
+                          child: Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.tune_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Search bar
+                    Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: TextField(
+                        controller: _ctrl,
+                        onChanged: (v) => setState(() => _query = v),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: kSlate800,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Cari lapangan atau lokasi...',
+                          hintStyle: const TextStyle(
+                            color: kSlate400,
+                            fontSize: 13,
+                          ),
+                          border: InputBorder.none,
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: kSlate400,
+                            size: 20,
+                          ),
+                          suffixIcon: _query.isNotEmpty
+                              ? GestureDetector(
+                                  onTap: () {
+                                    _ctrl.clear();
+                                    setState(() => _query = '');
+                                  },
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: kSlate400,
+                                    size: 18,
+                                  ),
+                                )
+                              : null,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Body ──────────────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Container(
+                decoration: const BoxDecoration(color: kSlate50),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+
+                    // Filter chips
                     SizedBox(
                       height: 40,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: kFilterTags.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: _filterTags.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(width: 8),
                         itemBuilder: (_, i) => TagChip(
-                          label: kFilterTags[i],
-                          active: _filter == kFilterTags[i],
-                          onTap: () {
-                            setState(() {
-                              _filter = kFilterTags[i];
-                            });
-                          },
+                          label: _filterTags[i],
+                          active: _filter == _filterTags[i],
+                          onTap: () =>
+                              setState(() => _filter = _filterTags[i]),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Recommended (${filtered.length})',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: kSlate800,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.78,
-                        ),
-                        itemCount: filtered.length > 4 ? 4 : filtered.length,
-                        itemBuilder: (_, i) => CourtGridCard(
-                          court: filtered[i],
-                          bookmarked:
-                              widget.bookmarks.contains(filtered[i].id),
-                          onToggleBookmark: () {
-                            widget.onToggleBookmark(filtered[i].id);
-                          },
-                          onTap: () {
-                            widget.onOpenCourt(filtered[i]);
-                          },
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    if (filtered.isEmpty)
+                    if (isLoading)
                       const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 32),
+                        padding: EdgeInsets.symmetric(vertical: 60),
                         child: Center(
-                          child: Text(
-                            'No courts found.',
-                            style: TextStyle(
-                              color: kSlate400,
-                              fontSize: 13,
-                            ),
+                          child: CircularProgressIndicator(color: kGreen),
+                        ),
+                      )
+                    else if (snapshot.hasError)
+                      Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              const Icon(
+                                Icons.wifi_off,
+                                size: 48,
+                                color: kSlate300,
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Gagal memuat lapangan.',
+                                style: TextStyle(color: kSlate500),
+                              ),
+                              const SizedBox(height: 12),
+                              TextButton(
+                                onPressed: () => setState(() {
+                                  _courtsFuture =
+                                      CourtService.fetchCourts();
+                                }),
+                                child: const Text('Coba lagi'),
+                              ),
+                            ],
                           ),
                         ),
                       )
-                    else
+                    else ...[
+                      // Featured grid (top 4)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          children: filtered.map((c) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: CourtListCard(
-                                court: c,
-                                bookmarked: widget.bookmarks.contains(c.id),
-                                onToggleBookmark: () {
-                                  widget.onToggleBookmark(c.id);
-                                },
-                                onTap: () {
-                                  widget.onOpenCourt(c);
-                                },
+                        child: Row(
+                          children: [
+                            Text(
+                              'Rekomendasi (${filtered.length})',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: kSlate800,
                               ),
-                            );
-                          }).toList(),
+                            ),
+                          ],
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.78,
+                          ),
+                          itemCount:
+                              filtered.length > 4 ? 4 : filtered.length,
+                          itemBuilder: (_, i) => CourtGridCard(
+                            court: filtered[i],
+                            bookmarked: widget.bookmarks
+                                .contains(filtered[i].id),
+                            onToggleBookmark: () =>
+                                widget.onToggleBookmark(filtered[i].id),
+                            onTap: () =>
+                                widget.onOpenCourt(filtered[i]),
+                          ),
+                        ),
+                      ),
+
+                      // Full list
+                      if (filtered.length > 4) ...[
+                        const SizedBox(height: 24),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: const Text(
+                            'Semua Lapangan',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: kSlate800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            children: filtered.skip(4).map((c) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: CourtListCard(
+                                  court: c,
+                                  bookmarked:
+                                      widget.bookmarks.contains(c.id),
+                                  onToggleBookmark: () =>
+                                      widget.onToggleBookmark(c.id),
+                                  onTap: () => widget.onOpenCourt(c),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+
+                      if (filtered.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 48),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.search_off,
+                                  size: 48,
+                                  color: kSlate300,
+                                ),
+                                SizedBox(height: 12),
+                                Text(
+                                  'Lapangan tidak ditemukan.',
+                                  style: TextStyle(
+                                    color: kSlate400,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -202,3 +365,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+

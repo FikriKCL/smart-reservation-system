@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../services/api_client.dart';
+import '../../main.dart';
 import 'intro_slide.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -9,172 +12,99 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _bgController;
-  late AnimationController _textController;
-
-  late Animation<double> _bgOpacity;
-  late Animation<double> _textOpacity;
-  late Animation<Offset> _titleSlide;
-  late Animation<Offset> _subtitleSlide;
-  late Animation<double> _exitOpacity;
-  late AnimationController _exitController;
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacity;
+  late Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
-
-    _bgController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _bgOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _bgController, curve: Curves.easeIn),
+    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    );
+    _scale = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
 
-    // Text animations
-    _textController = AnimationController(
-      duration: const Duration(milliseconds: 700),
-      vsync: this,
-    );
-    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _textController, curve: Curves.easeIn),
-    );
-    _titleSlide = Tween<Offset>(
-      begin: const Offset(0, 0.4),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
-    _subtitleSlide = Tween<Offset>(
-      begin: const Offset(0, 0.6),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _textController,
-      curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
-    ));
-
-    // Exit fade
-    _exitController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-    _exitOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _exitController, curve: Curves.easeIn),
-    );
-
-    _runSequence();
+    _controller.forward();
+    _navigate();
   }
 
-  Future<void> _runSequence() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    await _bgController.forward();
-    await Future.delayed(const Duration(milliseconds: 300));
-    await _textController.forward();
-    await Future.delayed(const Duration(milliseconds: 2000));
-    await _exitController.forward();
+  Future<void> _navigate() async {
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
 
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const IntroSliderScreen(),
-          transitionDuration: const Duration(milliseconds: 600),
-          transitionsBuilder: (_, animation, __, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-        ),
-      );
-    }
+    final loggedIn = await ApiClient.isLoggedIn();
+    if (!mounted) return;
+
+    final dest = loggedIn
+        ? const AppShell() as Widget
+        : const IntroSliderScreen();
+
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => dest,
+        transitionDuration: const Duration(milliseconds: 400),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _bgController.dispose();
-    _textController.dispose();
-    _exitController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
-      body: FadeTransition(
-        opacity: _exitOpacity,
+      backgroundColor: const Color(0xFF0F172A),
+      body: Center(
         child: FadeTransition(
-          opacity: _bgOpacity,
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE5E5E5),
-              borderRadius: BorderRadius.circular(32),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 60),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  FadeTransition(
-                    opacity: _textOpacity,
-                    child: SlideTransition(
-                      position: _titleSlide,
-                      child: RichText(
-                        text: const TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Welcome to ',
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.green,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                            TextSpan(
-                              text: '👋',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontStyle: FontStyle.normal,
-                              ),
-                            ),
-                            TextSpan(
-                              text: '\nHotel',
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.green,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+          opacity: _opacity,
+          child: ScaleTransition(
+            scale: _scale,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981),
+                    borderRadius: BorderRadius.circular(24),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Subtitle
-                  FadeTransition(
-                    opacity: _textOpacity,
-                    child: SlideTransition(
-                      position: _subtitleSlide,
-                      child: const Text(
-                        'The best hotel booking in this century\nto accompany your vacation',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF666666),
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
+                  child: const Icon(
+                    Icons.sports_tennis,
+                    color: Colors.white,
+                    size: 44,
                   ),
-
-                  const SizedBox(height: 48),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Padel Reservation',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Book your court, play your game.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

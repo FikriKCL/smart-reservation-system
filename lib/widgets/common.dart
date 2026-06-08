@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/court.dart';
 import '../theme.dart';
 
-// ── Primary Button ──────────────────────────────────────────────────────────
+// ── Primary Button ─────────────────────────────────────────────────────────────
 
 class PrimaryButton extends StatelessWidget {
   final String label;
@@ -26,36 +26,26 @@ class PrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: kGreen,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           elevation: 0,
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 15,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
         ),
       ),
     );
   }
 }
 
-// ── Tag Chip ─────────────────────────────────────────────────────────────────
+// ── Tag Chip ───────────────────────────────────────────────────────────────────
 
 class TagChip extends StatelessWidget {
   final String label;
   final bool active;
   final VoidCallback onTap;
 
-  const TagChip({
-    super.key,
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
+  const TagChip({super.key, required this.label, required this.active, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -84,9 +74,7 @@ class TagChip extends StatelessWidget {
   }
 }
 
-const kSlate600 = Color(0xFF475569);
-
-// ── Network Image with fallback ──────────────────────────────────────────────
+// ── Gambar lapangan dengan fallback ───────────────────────────────────────────
 
 class CourtImage extends StatelessWidget {
   final String url;
@@ -106,17 +94,17 @@ class CourtImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Jika URL kosong, tampilkan placeholder
+    if (url.isEmpty) {
+      return _placeholder();
+    }
+
     Widget img = Image.network(
       url,
       width: width,
       height: height,
       fit: fit,
-      errorBuilder: (_, __, ___) => Container(
-        width: width,
-        height: height,
-        color: kSlate200,
-        child: const Icon(Icons.image_not_supported, color: kSlate400),
-      ),
+      errorBuilder: (_, __, ___) => _placeholder(),
       loadingBuilder: (_, child, progress) {
         if (progress == null) return child;
         return Container(
@@ -129,14 +117,27 @@ class CourtImage extends StatelessWidget {
         );
       },
     );
+
     if (borderRadius != null) {
       img = ClipRRect(borderRadius: borderRadius!, child: img);
     }
     return img;
   }
+
+  Widget _placeholder() {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: kGreenLight,
+        borderRadius: borderRadius,
+      ),
+      child: const Icon(Icons.sports_tennis, color: kGreen, size: 32),
+    );
+  }
 }
 
-// ── Court Grid Card ──────────────────────────────────────────────────────────
+// ── Court Grid Card ────────────────────────────────────────────────────────────
 
 class CourtGridCard extends StatelessWidget {
   final Court court;
@@ -252,9 +253,10 @@ class CourtGridCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      // FIX: ganti $ dengan Rp
                       Text(
-                        '\Rp${court.pricePerHour.toInt()}/hr',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: kGreen),
+                        'Rp ${court.pricePerHour}/jam',
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: kGreen),
                       ),
                     ],
                   ),
@@ -268,7 +270,7 @@ class CourtGridCard extends StatelessWidget {
   }
 }
 
-// ── Court List Card ──────────────────────────────────────────────────────────
+// ── Court List Card ────────────────────────────────────────────────────────────
 
 class CourtListCard extends StatelessWidget {
   final Court court;
@@ -348,14 +350,10 @@ class CourtListCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '\Rp${court.pricePerHour.toInt()}/hr',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kGreen),
-                      ),
-                    ],
+                  // FIX: ganti $ dengan Rp
+                  Text(
+                    'Rp ${court.pricePerHour}/jam',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: kGreen),
                   ),
                 ],
               ),
@@ -380,23 +378,14 @@ class CourtListCard extends StatelessWidget {
 
 IconData facilityIcon(String name) {
   switch (name.toLowerCase()) {
-    case 'wifi':
-      return Icons.wifi;
-    case 'parking':
-      return Icons.local_parking;
-    case 'showers':
-      return Icons.shower;
-    case 'cafe':
-      return Icons.coffee;
-    case 'rackets':
-      return Icons.sports_tennis;
-    case 'coach':
-      return Icons.sports;
-    case 'lockers':
-      return Icons.lock;
-    case 'shop':
-      return Icons.shopping_bag;
-    default:
-      return Icons.check_circle_outline;
+    case 'wifi': return Icons.wifi;
+    case 'parking': return Icons.local_parking;
+    case 'showers': return Icons.shower;
+    case 'cafe': return Icons.coffee;
+    case 'rackets': return Icons.sports_tennis;
+    case 'coach': return Icons.sports;
+    case 'lockers': return Icons.lock;
+    case 'shop': return Icons.shopping_bag;
+    default: return Icons.check_circle_outline;
   }
 }

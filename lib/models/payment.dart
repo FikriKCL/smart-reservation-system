@@ -1,28 +1,34 @@
+import 'reservation.dart';
+
 class Payment {
   final int id;
   final int reservationId;
-  final String paymentMethod;
   final int amount;
-  final String status;
-  final String? transactionId;
+  final String status; // pending | paid
+  final String? paidAt;
+  final Reservation? reservation;
 
   Payment({
     required this.id,
     required this.reservationId,
-    required this.paymentMethod,
     required this.amount,
     required this.status,
-    this.transactionId,
+    this.paidAt,
+    this.reservation,
   });
 
   factory Payment.fromJson(Map<String, dynamic> json) {
     return Payment(
-      id: json['id'],
-      reservationId: json['reservation_id'],
-      paymentMethod: json['payment_method'],
-      amount: json['amount'],
-      status: json['status'],
-      transactionId: json['transaction_id'],
+      id: json['id'] ?? 0,
+      reservationId: json['reservation_id'] ?? 0,
+      amount: json['amount'] ?? 0,
+      status: json['status'] ?? 'pending',
+      paidAt: json['paid_at'] as String?,
+      reservation: json['reservation'] != null
+          ? Reservation.fromJson(json['reservation'] as Map<String, dynamic>)
+          : null,
     );
   }
+
+  bool get isPaid => status == 'paid';
 }

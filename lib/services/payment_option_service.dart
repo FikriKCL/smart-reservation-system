@@ -1,30 +1,46 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'api_client.dart';
 import '../models/payment_option.dart';
 
 class PaymentOptionService {
-  static const String baseUrl = 'http://10.0.2.2:8000/api';
+  /// GET /payment-options
+  // static Future<List<PaymentOption>> fetchPaymentOptions() async {
+  //   final response = await ApiClient.get('/payments-options');
 
-  static Future<List<PaymentOption>> fetchPaymentOptions() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/payment-options'),
-      headers: {
-        'Accept': 'application/json',
-      },
-    );
+  //   if (response.statusCode == 200) {
+  //     final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+  //     final List data = decoded['data'] ?? [];
+  //     return data
+  //         .map((e) => PaymentOption.fromJson(e as Map<String, dynamic>))
+  //         .toList();
+  //   }
 
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
+  //   throw Exception(
+  //     'Gagal memuat opsi pembayaran (${response.statusCode})',
+  //   );
+  // }
 
-      final List data = decoded['data'];
+static Future<List<PaymentOption>> fetchPaymentOptions() async {
+  final response = await ApiClient.get('/payments-options');
 
-      return data.map((item) {
-        return PaymentOption.fromJson(item);
-      }).toList();
-    }
+  print('STATUS = ${response.statusCode}');
+  print('BODY = ${response.body}');
 
-    throw Exception(
-      'Failed to fetch payment options. Status: ${response.statusCode}, Body: ${response.body}',
-    );
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+
+    print('DECODED = $decoded');
+
+    final List data = decoded['data'] ?? [];
+
+    return data
+        .map((e) => PaymentOption.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
+
+  throw Exception(
+    'Gagal memuat opsi pembayaran (${response.statusCode})',
+  );
+}
+
 }
