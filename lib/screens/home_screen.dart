@@ -30,14 +30,18 @@ class _HomeScreenState extends State<HomeScreen> {
   final _ctrl = TextEditingController();
 
   late Future<List<Court>> _courtsFuture;
+  late Future<List<Court>> _nearestCourtsFuture;
   String? _userName;
 
-  @override
-  void initState() {
-    super.initState();
-    _courtsFuture = CourtService.fetchCourts();
-    _loadUserName();
-  }
+@override
+void initState() {
+  super.initState();
+
+  _courtsFuture = CourtService.fetchCourts();
+  _nearestCourtsFuture = CourtService.getNearestCourts();
+
+  _loadUserName();
+}
 
   Future<void> _loadUserName() async {
     final name = await ApiClient.getUserName();
@@ -193,6 +197,65 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 20),
+
+                    FutureBuilder<List<Court>>(
+  future: _nearestCourtsFuture,
+  builder: (context, snapshot) {
+    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+      return const SizedBox();
+    }
+
+    final nearest = snapshot.data!;
+    for (final court in nearest.take(5)) {
+  print('NEAREST COURT: ${court.name}');
+}
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            '📍 Lapangan Terdekat',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        SizedBox(
+          height: 250,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: nearest.length > 5 ? 5 : nearest.length,
+            itemBuilder: (_, i) {
+  final court = nearest[i];
+
+  return Container(
+    width: 180,
+    margin: const EdgeInsets.only(right: 12),
+    child: CourtGridCard(
+      court: court,
+      bookmarked: widget.bookmarks.contains(court.id),
+      onToggleBookmark: () =>
+          widget.onToggleBookmark(court.id),
+      onTap: () =>
+          widget.onOpenCourt(court),
+    ),
+  );
+},
+          ),
+        ),
+
+        const SizedBox(height: 20),
+      ],
+    );
+  },
+),
 
                     // Filter chips
                     SizedBox(

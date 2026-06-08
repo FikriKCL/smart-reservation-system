@@ -7,6 +7,7 @@ class Court {
   final String picture;
   final double rating;
   final String description;
+  final double distance;
 
   Court({
     required this.id,
@@ -17,6 +18,7 @@ class Court {
     required this.picture,
     required this.rating,
     required this.description,
+    this.distance = 0,
   });
 
   factory Court.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,10 @@ class Court {
       picture: json['picture'] ?? '',
       rating: double.tryParse(json['rating'].toString()) ?? 0.0,
       description: json['description'] ?? '',
+      distance:
+          double.tryParse(json['distance']?.toString() ?? '0') ?? 0,
     );
   }
+
+  
 }

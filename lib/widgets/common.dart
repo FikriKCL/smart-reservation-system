@@ -226,20 +226,50 @@ class CourtGridCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on, size: 10, color: kSlate400),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(
-                          court.location,
-                          style: const TextStyle(fontSize: 10, color: kSlate400),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                  Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, size: 10, color: kSlate400),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                court.location,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: kSlate400,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
+
+                        if (court.distance > 0) ...[
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.near_me,
+                                size: 10,
+                                color: kGreen,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${court.distance.toStringAsFixed(1)} km',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: kGreen,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -335,20 +365,50 @@ class CourtListCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on, size: 11, color: kSlate400),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(
-                          court.location,
-                          style: const TextStyle(fontSize: 11, color: kSlate400),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+                  Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Row(
+      children: [
+        const Icon(Icons.location_on, size: 11, color: kSlate400),
+        const SizedBox(width: 2),
+        Expanded(
+          child: Text(
+            court.location,
+            style: const TextStyle(
+              fontSize: 11,
+              color: kSlate400,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    ),
+
+    if (court.distance > 0) ...[
+      const SizedBox(height: 4),
+      Row(
+        children: [
+          const Icon(
+            Icons.near_me,
+            size: 11,
+            color: kGreen,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            '${court.distance.toStringAsFixed(1)} km dari Anda',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: kGreen,
+            ),
+          ),
+        ],
+      ),
+    ],
+  ],
+),
                   const SizedBox(height: 6),
                   // FIX: ganti $ dengan Rp
                   Text(

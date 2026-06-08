@@ -37,12 +37,12 @@ static Future<Map<String, dynamic>> createReservation({
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-      if (response.statusCode == 201) {
-        return {
-          'success': true,
-          'data': Reservation.fromJson(data['data'] as Map<String, dynamic>),
-        };
-      }
+        if (response.statusCode == 201) {
+          return {
+            'success': true,
+            'data': data['data'],
+          };
+        }
 
       if (response.statusCode == 409) {
         return {

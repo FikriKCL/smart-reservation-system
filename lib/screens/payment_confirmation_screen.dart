@@ -72,9 +72,7 @@ class PaymentConfirmationScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const Spacer(),
-
             PrimaryButton(
               label: 'Konfirmasi Pembayaran',
               onPressed: () => _handleConfirm(context),
@@ -111,39 +109,27 @@ class PaymentConfirmationScreen extends StatelessWidget {
   }
 
   Future<void> _handleConfirm(BuildContext context) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(color: kGreen),
-      ),
-    );
+    _showLoading(context);
 
     final reservationResult = await ReservationService.createReservation(
-      courtId: (booking.court.id),
+      courtId: booking.court.id.toString(),
       reservationDate: booking.reservationDate,
       startTime: booking.startTime,
       endTime: booking.endTime,
     );
 
     if (!context.mounted) return;
-
-    Navigator.pop(context); // tutup loading
+    Navigator.pop(context);
 
     if (reservationResult['success'] == true) {
-      final data = reservationResult['data'];
+      final reservationId = int.parse(reservationResult['data']['id'].toString());
 
-      final int reservationId = data is Map<String, dynamic>
-          ? data['id']
-          : data.id as int;
+      // if (reservationId == null) {
+      //   _showSnack(context, 'ID reservasi tidak valid.');
+      //   return;
+      // }
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(
-          child: CircularProgressIndicator(color: kGreen),
-        ),
-      );
+      _showLoading(context);
 
       final paymentResult = await PaymentService.createPayment(
         reservationId: reservationId,
@@ -152,8 +138,7 @@ class PaymentConfirmationScreen extends StatelessWidget {
       );
 
       if (!context.mounted) return;
-
-      Navigator.pop(context); // tutup loading payment
+      Navigator.pop(context);
 
       if (paymentResult['success'] == true) {
         Navigator.pop(context, {
@@ -174,6 +159,30 @@ class PaymentConfirmationScreen extends StatelessWidget {
         reservationResult['message'] ?? 'Reservasi gagal',
       );
     }
+  }
+
+  int? _extractReservationId(dynamic data) {
+    if (data == null) return null;
+
+    if (data is Map<String, dynamic>) {
+      return int.tryParse(data['id'].toString());
+    }
+
+    try {
+      return int.tryParse(data.id.toString());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _showLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: kGreen),
+      ),
+    );
   }
 
   void _showConflictDialog(
@@ -265,8 +274,8 @@ class PaymentConfirmationScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // tutup dialog
-              Navigator.pop(context); // kembali ke payment methods / date flow
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
             child: const Text(
               'Pilih Jadwal Lain',
