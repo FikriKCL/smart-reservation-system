@@ -6,20 +6,15 @@ import '../widgets/common.dart';
 import '../screens/detail_screen.dart';
 import '../screens/date_screen.dart';
 import '../screens/payment_methods_screen.dart';
-import '../screens/other_screens.dart';
 
 class FranchiseDetailScreen extends StatefulWidget {
   final int locationId;
   final String locationName;
-  final List<String> bookmarks;
-  final void Function(String id) onToggleBookmark;
 
   const FranchiseDetailScreen({
     super.key,
     required this.locationId,
     required this.locationName,
-    required this.bookmarks,
-    required this.onToggleBookmark,
   });
 
   @override
@@ -39,17 +34,12 @@ class _FranchiseDetailScreenState extends State<FranchiseDetailScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => StatefulBuilder(
-          builder: (ctx, setStateDetail) => DetailScreen(
-            court: court,
-            bookmarked: widget.bookmarks.contains(court.id),
-            onToggleBookmark: () {
-              widget.onToggleBookmark(court.id);
-              setStateDetail(() {});
-            },
-            onBack: () => Navigator.pop(ctx),
-            onBook: () => _openDateScreen(ctx, court),
-          ),
+        builder: (_) => DetailScreen(
+          court: court,
+          bookmarked: false,
+          onToggleBookmark: () {},
+          onBack: () => Navigator.pop(context),
+          onBook: () => _openDateScreen(context, court),
         ),
       ),
     );
@@ -77,27 +67,8 @@ class _FranchiseDetailScreenState extends State<FranchiseDetailScreen> {
     );
 
     if (result != null && result['success'] == true && mounted) {
-      final bookingWithId = BookingInfo(
-        date: info.date,
-        dateStr: info.dateStr,
-        startTime: info.startTime,
-        endTime: info.endTime,
-        players: info.players,
-        total: info.total,
-        court: info.court,
-        reservationId: result['reservationId'],
-      );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SuccessScreen(
-            booking: bookingWithId,
-            onDone: () => Navigator.of(context).popUntil((route) => route.isFirst),
-            onViewBookings: () => Navigator.of(context).popUntil((route) => route.isFirst),
-          ),
-        ),
-      );
+      // Kembali ke home setelah booking berhasil
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
 
@@ -133,8 +104,8 @@ class _FranchiseDetailScreenState extends State<FranchiseDetailScreen> {
               final court = courts[i];
               return CourtListCard(
                 court: court,
-                bookmarked: widget.bookmarks.contains(court.id),
-                onToggleBookmark: () => widget.onToggleBookmark(court.id),
+                bookmarked: false,
+                onToggleBookmark: () {},
                 onTap: () => _openCourt(context, court),
               );
             },
